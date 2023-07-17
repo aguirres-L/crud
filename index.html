@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PruebaT</title>
+    <style>
+        .container {
+            border: solid 2px red;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .container h3 {
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>Prueba Tecnica de Jon</h3>
+        <div class="resp" id="crudContainer"></div>
+        <div id="formContainer"></div>
+    </div>
+
+    <script type="text/javascript">
+        var db = [];
+        var crudContainer = document.getElementById("crudContainer");
+        var formContainer = document.getElementById("formContainer");
+        var dataToEdit = null;
+
+        function loadData() {
+            var savedData = localStorage.getItem("playersData");
+            if (savedData) {
+                db = JSON.parse(savedData);
+            } else {
+                var dataFromJsonServer = [
+                    {
+                        id: 2,
+                        name: "De Paul",
+                        position: "MC",
+                        apodo: "7",
+                    },
+                    {
+                        id: 3,
+                        name: "Marinez",
+                        position: "PO",
+                        apodo: "23",
+                    },
+                    {
+                        id: 4,
+                        name: "Di Maria",
+                        position: "DC",
+                        apodo: "11",
+                    },
+                ];
+                db = dataFromJsonServer;
+            }
+        }
+
+        function saveDataToLocalStorage() {
+            localStorage.setItem("playersData", JSON.stringify(db));
+        }
+
+        function deleteData(id) {
+            var newData = db.filter(function (el) {
+                return el.id !== id;
+            });
+            db = newData;
+            saveDataToLocalStorage();
+            renderTable();
+        }
+
+        function editData(id) {
+            dataToEdit = db.find(function (el) {
+                return el.id === id;
+            });
+            renderForm();
+        }
+
+        function renderTable() {
+            var tableHtml = "";
+            if (db.length > 0) {
+                tableHtml += "<table>" +
+                    "<thead>" +
+                    "<tr>" +
+                    "<th>Nombre</th>" +
+                    "<th>Posicion</th>" +
+                    "<th>Dorsal</th>" +
+                    "<th></th>" +
+                    "<th></th>" +
+                    "</tr>" +
+                    "</thead>" +
+                    "<tbody>";
+                db.forEach(function (el) {
+                    tableHtml += "<tr>" +
+                        "<td>" + el.name + "</td>" +
+                        "<td>" + el.position + "</td>" +
+                        "<td>" + el.apodo + "</td>" +
+                        "<td><button onclick=\"editData(" + el.id + ")\">Editar</button></td>" +
+                        "<td><button onclick=\"deleteData(" + el.id + ")\">Limpiar</button></td>" +
+                        "</tr>";
+                });
+                tableHtml += "</tbody></table>";
+            } else {
+                tableHtml = "<p>Sin Datos</p>";
+            }
+            crudContainer.innerHTML = tableHtml;
+        }
+
+        function renderForm() {
+            var formHtml =
+                "<h3>" + (dataToEdit ? "Editar" : "Agregar") + "</h3>" +
+                "<form onsubmit=\"handleSubmit(event)\" class=\"tabla\">" +
+                "<input type=\"hidden\" name=\"id\" value=\"" + (dataToEdit ? dataToEdit.id : "") + "\" />" +
+                "<input type=\"text\" name=\"name\" placeholder=\"Nombre\" value=\"" + (dataToEdit ? dataToEdit.name : "") + "\" />" +
+                "<input type=\"text\" name=\"position\" placeholder=\"Posicion\" value=\"" + (dataToEdit ? dataToEdit.position : "") + "\" />" +
+                "<input type=\"text\" name=\"apodo\" placeholder=\"Dorsal\" value=\"" + (dataToEdit ? dataToEdit.apodo : "") + "\" />" +
+                "<div>" +
+                "<input type=\"submit\" value=\"" + (dataToEdit ? "Actualizar" : "Agregar") + "\" />" +
+                "</div>" +
+                "</form>";
+
+            formContainer.innerHTML = formHtml;
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            var form = e.target;
+            var formData = new FormData(form);
+            var player = Object.fromEntries(formData.entries());
+
+            if (!player.name || !player.position) {
+                alert("Faltan Datos");
+                return;
+            }
+
+            if (dataToEdit) {
+                updateData(player);
+            } else {
+                createData(player);
+            }
+
+            form.reset();
+        }
+
+        function createData(data) {
+            data.id = Date.now();
+            db.push(data);
+            saveDataToLocalStorage();
+            renderTable();
+        }
+
+        function updateData(data) {
+            var index = db.findIndex(function (el) {
+                return el.id === dataToEdit.id;
+            });
+            if (index !== -1) {
+                db[index] = data;
+                saveDataToLocalStorage();
+                renderTable();
+            }
+        }
+
+        loadData();
+        renderTable();
+        renderForm();
+    </script>
+</body>
+</html>
